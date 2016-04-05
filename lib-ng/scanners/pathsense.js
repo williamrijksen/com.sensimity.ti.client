@@ -1,29 +1,23 @@
-var PathSense = require('com.sensimity.ti.pathsense'),
-    beaconMapper = require('./../mapper/pathsense/beacon'),
-    beaconHandler = require('./../handlers/beaconHandler');
+import PathSense from 'com.sensimity.ti.pathsense';
+import beaconMapper from './../mapper/pathsense/beacon';
+import beaconHandler from './../handlers/beaconHandler';
 
-var enteredRegion = (geofenceRegion) => {
-    var beacon = beaconMapper.map(geofenceRegion);
+const enteredRegion = (geofenceRegion) => {
+    const beacon = beaconMapper.map(geofenceRegion);
     beaconHandler.handle(beacon);
 };
 
-const init = () => {
-    PathSense.addEventListener('enteredRegion', enteredRegion);
-};
+const init = () => PathSense.addEventListener('enteredRegion', enteredRegion);
 
-const destruct = () => {
-    PathSense.removeEventListener('enteredRegion', enteredRegion);
-};
+const destruct = () => PathSense.removeEventListener('enteredRegion', enteredRegion);
 
-const startMonitoring = (region) => {
-    PathSense.startMonitoringForRegion(region);
-};
+const startMonitoring = (region) => PathSense.startMonitoringForRegion(region);
 
-const stopMonitoring = () => {
-    PathSense.stopMonitoringAllRegions();
-};
+const stopMonitoring = () => PathSense.stopMonitoringAllRegions();
 
-exports.init = init;
-exports.destruct = destruct;
-exports.startMonitoring = startMonitoring;
-exports.stopMonitoring = stopMonitoring;
+export default {
+	init,
+	destruct,
+	startMonitoring,
+	stopMonitoring,
+};

@@ -1,19 +1,16 @@
-'use strict';
+import Alloy from 'alloy';
+import {_} from 'alloy/underscore';
+import Backbone from 'alloy/backbone';
+import reste from "reste";
 
-/* jshint ignore:start */
-var Alloy = require('alloy'),
-    _ = require('alloy/underscore')._,
-    Backbone = require('alloy/backbone');
-/* jshint ignore:end */
+const basicAuthHeader = Ti.Utils.base64encode(`${Alloy.CFG.sensimity.basicHeaderAuthUsername}:${Alloy.CFG.sensimity.basicHeaderAuthPassword}`).toString();
+const api = new reste();
 
-var expires,
-    basicAuthHeader = Ti.Utils.base64encode(Alloy.CFG.sensimity.basicHeaderAuthUsername + ':' + Alloy.CFG.sensimity.basicHeaderAuthPassword).toString(),
-    url = "https://api.sensimity.com/",
-    reste = require("reste"),
-    api = new reste(),
-    access = {};
+let expires;
+let url = "https://api.sensimity.com/";
+let access = {};
 
-if (!_.isUndefined(Alloy.CFG.sensimity.url)) {
+if (Alloy.CFG.sensimity.url) {
     url = Alloy.CFG.sensimity.url;
 }
 
@@ -21,17 +18,17 @@ api.config({
     debug: false, // allows logging to console of ::REST:: messages
     autoValidateParams: false, // set to true to throw errors if <param> url properties are not passed
     timeout: 10000,
-    url: url,
+    url,
     requestHeaders: {
         "Accept": "application/vnd.sensimity.v1+json",
         "Content-Type": "application/vnd.sensimity.v1+json",
-        "Authorization": 'Basic ' + basicAuthHeader
+        "Authorization": `Basic ${basicAuthHeader}`
     },
     methods: [{
         name: 'oauth',
         post: 'oauth'
     }],
-    onLoad: function(e, callback) {
+    onLoad(e, callback) {
         callback(e);
     }
 });
@@ -44,14 +41,17 @@ function init(clientReady) {
     // Check the refreshtoken is expired, if expired retrieve a new accesstoken
     if (isAccessTokenExpired()) {
         refreshAccessToken(clientReady);
-    } else {
-        // Set callback
-        clientReady();
+        return;
     }
+
+    // Set callback
+    clientReady();
 }
 
-exports.init = init;
-exports.getAccess = getAccess;
+export {
+    init,
+    getAccess
+};
 
 /**
  * Private functions
@@ -73,21 +73,21 @@ function isAccessTokenExpired() {
 
 // Refresh the accesstoken by refreshtoken or password
 function refreshAccessToken(successCallback) {
-    var requestBody = {};
+    const body = {};
 
     if (isRefreshTokenAvailable()) {
-        var auth = getAuth();
-        requestBody.refresh_token = auth.refreshToken;
-        requestBody.grant_type = 'refresh_token';
+        const auth = getAuth();
+        body.refresh_token = auth.refreshToken;
+        body.grant_type = 'refresh_token';
     } else {
-        requestBody.username = Alloy.CFG.sensimity.username;
-        requestBody.password = Alloy.CFG.sensimity.password;
-        requestBody.grant_type = 'password';
+        body.username = Alloy.CFG.sensimity.username;
+        body.password = Alloy.CFG.sensimity.password;
+        body.grant_type = 'password';
     }
 
     api.oauth({
-        body: requestBody
-    }, function(response) {
+        body
+    }, response => {
         if (!_.isUndefined(response.status)) {
             switch (response.status) {
                 case 400:
@@ -110,10 +110,10 @@ function refreshAccessToken(successCallback) {
 
 // Save the obtained token
 function saveTokens(response) {
-    var auth = getAuth();
+    const auth = getAuth();
     // Save the retrieved accesstoken
     auth.accessToken = response.access_token;
-    if (!_.isUndefined(response.refresh_token)) {
+    if (response.refresh_token) {
         // If also an refreshtoken is retrieved, save the refreshtoken
         auth.refreshToken = response.refresh_token;
     }
@@ -124,7 +124,7 @@ function saveTokens(response) {
 
 // check refreshtoken is earlier retrieved
 function isRefreshTokenAvailable() {
-    var auth = getAuth();
+    const auth = getAuth();
     return !_.isEmpty(auth) && !_.isUndefined(auth.refreshToken);
 }
 
@@ -136,7 +136,7 @@ function now() {
 // Get access from memory or storage
 function getAccess() {
     if (_.isEmpty(access)) {
-        var auth = getAuth();
+        const auth = getAuth();
         if (_.isEmpty(auth) || _.isNaN(auth.expires)) {
             return {};
         }

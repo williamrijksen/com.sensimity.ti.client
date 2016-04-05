@@ -1,7 +1,5 @@
-/* jshint ignore:start */
-var Alloy = require('alloy'),
-    _ = require('alloy/underscore')._,
-    Backbone = require('alloy/backbone');
-/* jshint ignore:end */
-
-module.exports = _.clone(Backbone.Events);
+import Alloy from 'alloy';
+import {_} from 'alloy/underscore';
+import Backbone from 'alloy/backbone';
+// Clone
+export default _.clone(Backbone.Events);

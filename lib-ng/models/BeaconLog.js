@@ -1,12 +1,11 @@
-/* jshint ignore:start */
-var Alloy = require('alloy'),
-    _ = require('alloy/underscore')._,
-    Backbone = require('alloy/backbone');
+import Alloy from 'alloy';
+import {_} from 'alloy/underscore';
+import Backbone from 'alloy/backbone';
 /* jshint ignore:end */
 
-var model, collection;
+let model, collection;
 
-exports.definition = {
+export const definition = {
     config: {
         columns: {
             "id": "INTEGER PRIMARY KEY AUTOINCREMENT",
@@ -24,19 +23,18 @@ exports.definition = {
             idAttribute: "id"
         }
     },
-    extendModel: function(Model) {
+    extendModel(Model) {
         _.extend(Model.prototype, {});
 
         return Model;
     },
-    extendCollection: function(Collection) {
+    extendCollection(Collection) {
         _.extend(Collection.prototype, {
             // Extend, override or implement Backbone.Collection
-            erase: function(args) {
-                var self = this;
+            erase(args) {
+                const self = this;
 
-                var sql = "DELETE FROM " + self.config.adapter.collection_name,
-                    db = Ti.Database.open(self.config.adapter.db_name);
+                const sql = `DELETE FROM ${self.config.adapter.collection_name}`, db = Ti.Database.open(self.config.adapter.db_name);
                 db.execute(sql);
                 db.close();
 
@@ -51,5 +49,5 @@ exports.definition = {
 // Alloy compiles models automatically to this statement. In this case the models not exists in /app/models folder, so this must be fixed by set this statements manually.
 model = Alloy.M("BeaconLog", exports.definition, []);
 collection = Alloy.C("BeaconLog", exports.definition, model);
-exports.Model = model;
-exports.Collection = collection;
+export {model as Model};
+export {collection as Collection};

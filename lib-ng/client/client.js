@@ -1,37 +1,34 @@
-'use strict';
 /* Compatibility for Ti standalone (without Alloy) */
 if (typeof OS_ANDROID === "undefined") {
-    var OS_ANDROID = Ti.Platform.name === "android";
-    var OS_IOS = Ti.Platform.name === "iPhone OS";
+    const OS_ANDROID = Ti.Platform.name === "android";
+    const OS_IOS = Ti.Platform.name === "iPhone OS";
 }
 
-/* jshint ignore:start */
-var Alloy = require('alloy'),
-    _ = require('alloy/underscore')._,
-    Backbone = require('alloy/backbone');
-/* jshint ignore:end */
+import Alloy from 'alloy';
+import {_} from 'alloy/underscore';
+import Backbone from 'alloy/backbone';
+import reste from "reste";
+import oauth2 from './oauth2';
 
-var token,
-    expires,
-    url = "https://api.sensimity.com/",
-    reste = require("reste"),
-    api = new reste(),
-    oauth2 = require('./oauth2');
+let token;
+let expires;
+let url = "https://api.sensimity.com/";
+const api = new reste();
 
-if (!_.isUndefined(Alloy.CFG.sensimity.url)) {
+if (Alloy.CFG.sensimity.url) {
     url = Alloy.CFG.sensimity.url;
 }
 
 function setApiConfig() {
-    api.config({
+    const config = {
         debug: false, // allows logging to console of ::REST:: messages
         autoValidateParams: false, // set to true to throw errors if <param> url properties are not passed
         timeout: 10000,
-        url: url,
+        url,
         requestHeaders: {
             "Accept": "application/vnd.sensimity.v1+json",
             "Content-Type": "application/vnd.sensimity.v1+json",
-            "Authorization": "Bearer " + oauth2.getAccess().token
+            "Authorization": `Bearer ${oauth2.getAccess().token}`
         },
         methods: [
             {
@@ -55,70 +52,66 @@ function setApiConfig() {
                 post: "scan-results"
             }
         ],
-        onError: function(e) {
-            Ti.API.info('There was an error accessing the API > ' + JSON.stringify(e));
+        onError(e) {
+            Ti.API.info(`There was an error accessing the API > ${JSON.stringify(e)}`);
         },
-        onLoad: function(e, callback) {
+        onLoad(e, callback) {
             callback(e);
         }
-    });
+    };
+
+    api.config(config);
 }
 
 function getNetworks(callback) {
-    oauth2.init(function() {
+    oauth2.init(() => {
         setApiConfig();
-        api.getNetworks(function (beacons) {
-            callback(beacons);
-        });
+        api.getNetworks(beacons => callback(beacons));
     });
 }
 
-function getBeacons(id, callback) {
-    oauth2.init(function() {
+function getBeacons(networkId, callback) {
+    oauth2.init(() => {
         setApiConfig();
-        api.getBeacons({networkId: id}, function (beacons) {
-            callback(beacons);
-        });
+        api.getBeacons({
+            networkId
+        }, response => callback(response));
     });
 }
 
 function getBusinessRules(networkId, beaconId, callback) {
-    oauth2.init(function() {
+    oauth2.init(() => {
         setApiConfig();
         api.getBusinessRules({
-            networkId: networkId,
-            beaconId: beaconId
-        }, function (response) {
-            callback(response);
-        });
+            networkId,
+            beaconId
+        }, response => callback(response));
     });
 }
 
 function getSingleBusinessRule(networkId, businessRuleId, callback) {
-    oauth2.init(function() {
+    oauth2.init(() => {
         setApiConfig();
         api.getSingleBusinessRule({
-            networkId: networkId,
-            businessRuleId: businessRuleId
-        }, function (response) {
-            callback(response);
-        });
+            networkId,
+            businessRuleId
+        }, response => callback(response));
     });
 }
 
-function sendScanResults(post, callback) {
-    oauth2.init(function() {
+function sendScanResults(body, callback) {
+    oauth2.init(() => {
         setApiConfig();
         api.sendScanResults({
-            body: post
+            body
         }, callback);
     });
 }
 
-module.exports = {
-    'getNetworks': getNetworks,
-    'getBeacons': getBeacons,
-    'sendScanResults': sendScanResults,
-    'getSingleBusinessRule': getSingleBusinessRule,
-    'getBusinessRules': getBusinessRules
+export default {
+    getNetworks,
+    getBeacons,
+    sendScanResults,
+    getSingleBusinessRule,
+    getBusinessRules
 };

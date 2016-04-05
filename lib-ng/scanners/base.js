@@ -4,10 +4,9 @@ if (typeof OS_ANDROID === "undefined") {
     var OS_IOS = Ti.Platform.name === "iPhone OS";
 }
 
-/* jshint ignore:start */
-var Alloy = require('alloy'),
-    _ = require('alloy/underscore')._,
-    Backbone = require('alloy/backbone');
+import Alloy from 'alloy';
+import {_} from 'alloy/underscore';
+import Backbone from 'alloy/backbone';
 /* jshint ignore:end */
 
 /**
@@ -17,11 +16,8 @@ var Alloy = require('alloy'),
  * @param beaconRegionMonitoringMapper BeaconRegionMonitoringMapper to convert a knownbeacon in a beaconregion which can be monitored.
  * @constructor Use this basescanner as an abstract function. Please set in the child function var self = BaseScanner();
  */
-var BaseScanner = function (beaconMapper, beaconRegionMapper, beaconRegionMonitoringMapper) {
-    var self = this,
-        beaconHandler = require('./../handlers/beaconHandler'),
-        beaconLog = require('./../service/beaconLog'),
-        knownBeaconService = require('./../service/knownBeacons');
+const BaseScanner = function (beaconMapper, beaconRegionMapper, beaconRegionMonitoringMapper) {
+    const self = this, beaconHandler = require('./../handlers/beaconHandler'), beaconLog = require('./../service/beaconLog'), knownBeaconService = require('./../service/knownBeacons');
 
     /**
      * Public functions
@@ -31,7 +27,7 @@ var BaseScanner = function (beaconMapper, beaconRegionMapper, beaconRegionMonito
      * Initialise the scanner.
      * @param networkIdentifier the identifier of the Sensimity-network which must be scanned
      */
-    this.init = function (networkIdentifier) {
+    this.init = networkIdentifier => {
         if (_.isUndefined(networkIdentifier)) {
             Ti.API.warn('Network identifier is undefined. Scanner not initialized');
             return;
@@ -58,17 +54,17 @@ var BaseScanner = function (beaconMapper, beaconRegionMapper, beaconRegionMonito
         knownBeaconService.refreshBeacons([self.networkId]);
     };
 
-    this.isOldTiVersion = function () {
-        var version = Ti.version.split(".");
+    this.isOldTiVersion = () => {
+        const version = Ti.version.split(".");
         if (version[0] < 5) { // Version < 5
             return true;
         }
         return (version[0] === 5 && version[1] === 0); // Version 5.0.*
     };
 
-    this.handleiOSLocationPermissions = function () {
+    this.handleiOSLocationPermissions = () => {
         // Handle iOS
-        var permissionType = Ti.Geolocation.AUTHORIZATION_ALWAYS;
+        const permissionType = Ti.Geolocation.AUTHORIZATION_ALWAYS;
         if (self.isOldTiVersion()) { // Version 5.0.*
             // BC: request permission the old way for Titanium < 5.0
             Ti.Geolocation.requestAuthorization(permissionType);
@@ -82,7 +78,7 @@ var BaseScanner = function (beaconMapper, beaconRegionMapper, beaconRegionMonito
         }
 
         // Request permission and wait for success
-        Ti.Geolocation.requestLocationPermissions(permissionType, function(res) {
+        Ti.Geolocation.requestLocationPermissions(permissionType, res => {
             if (res.success) {
                 self.prepareForScanning();
             }
@@ -93,27 +89,23 @@ var BaseScanner = function (beaconMapper, beaconRegionMapper, beaconRegionMonito
      * Setter for the beaconRegions which will be scanned
      * @param beaconRegions The setting beaconRegions
      */
-    this.setBeaconRegions = function (beaconRegions) {
-        self.beaconRegions = beaconRegions;
-    };
+    this.setBeaconRegions = beaconRegions => self.beaconRegions = beaconRegions;
 
     /**
      * Start scanning of beacons in setting beaconId
      */
-    this.startScanning = function () {
-        self.bindService(this.startScanningAfterBinding);
-    };
+    this.startScanning = () => self.bindService(this.startScanningAfterBinding);
 
-    this.startScanningAfterBinding = function () {
-        var knownBeacons = knownBeaconService.getKnownBeacons(self.networkId);
-        var bleBeacons = knownBeacons.filter(knownBeacon => !knownBeacon.get('is_geofence'));
-        var geofenceBeacons = knownBeacons.filter(knownBeacon => knownBeacon.get('is_geofence'));
+    this.startScanningAfterBinding = () => {
+        const knownBeacons = knownBeaconService.getKnownBeacons(self.networkId);
+        const bleBeacons = knownBeacons.filter(knownBeacon => !knownBeacon.get('is_geofence'));
+        const geofenceBeacons = knownBeacons.filter(knownBeacon => knownBeacon.get('is_geofence'));
         startScanningOfKnownBeacons(bleBeacons);
         self.addAllEventListeners();
         self.startScanningGeofences(geofenceBeacons);
     };
 
-    this.startScanningGeofences = function(geofenceBeacons) {
+    this.startScanningGeofences = geofenceBeacons => {
         // fallback for locations who don't have physical-BLE-Beacons
         if (geofenceBeacons.length === 0) {
             return;
@@ -136,15 +128,15 @@ var BaseScanner = function (beaconMapper, beaconRegionMapper, beaconRegionMonito
      * Map a found beacon and start the beaconHandler
      * @param beaconRaw A raw beacon found by the beaconscanner
      */
-    this.beaconFound = function (beaconRaw) {
+    this.beaconFound = beaconRaw => {
         if (_.isUndefined(beaconRaw.rssi)) {
             return;
         }
-        var rssi = parseInt(beaconRaw.rssi);
-        if (_.isEqual(rssi, 0)) {
+        const rssi = parseInt(beaconRaw.rssi);
+        if (rssi === 0) {
             return;
         }
-        var beacon = beaconMapper.map(beaconRaw);
+        const beacon = beaconMapper.map(beaconRaw);
         beaconLog.insertBeaconLog(beacon);
         beaconHandler.handle(beacon);
     };
@@ -152,9 +144,7 @@ var BaseScanner = function (beaconMapper, beaconRegionMapper, beaconRegionMonito
     /**
      * Destruct the scanner
      */
-    this.destruct = function () {
-        self.beaconRegions = [];
-    };
+    this.destruct = () => self.beaconRegions = [];
 
     /**
      * Private functions
@@ -162,8 +152,8 @@ var BaseScanner = function (beaconMapper, beaconRegionMapper, beaconRegionMonito
 
     // Start the scanning of found beacons
     function startScanningOfKnownBeacons(knownBeacons) {
-        _.each(knownBeacons, function (knownBeacon) {
-            if (!_.isEqual(knownBeacon.get('UUID'), null)) {
+        knownBeacons.forEach(knownBeacon => {
+            if (knownBeacon.get('UUID') === null) {
                 startScanningOfBeacon(knownBeacon);
             }
         });
@@ -179,8 +169,8 @@ var BaseScanner = function (beaconMapper, beaconRegionMapper, beaconRegionMonito
             return;
         }
 
-        var beaconRegionMonitoring = beaconRegionMonitoringMapper.map(knownBeacon);
-        var beaconRegion = beaconRegionMapper.map(knownBeacon);
+        const beaconRegionMonitoring = beaconRegionMonitoringMapper.map(knownBeacon);
+        const beaconRegion = beaconRegionMapper.map(knownBeacon);
         self.Beacons.startMonitoringForRegion(beaconRegionMonitoring);
         self.beaconRegions.push(beaconRegion);
     }
@@ -192,10 +182,8 @@ var BaseScanner = function (beaconMapper, beaconRegionMapper, beaconRegionMonito
      */
     function isBeaconRegionScanning(knownBeacon) {
         // Check beaconregion already scanning
-        return _.some(self.beaconRegions, function (region) {
-            return _.isEqual(region.uuid.toUpperCase(), knownBeacon.get('UUID').toUpperCase());
-        });
+        return self.beaconRegions.some(region => region.uuid.toUpperCase() === knownBeacon.get('UUID').toUpperCase());
     }
 };
 
-module.exports = BaseScanner;
+export default BaseScanner;

@@ -1,12 +1,9 @@
-/* jshint ignore:start */
-var Alloy = require('alloy'),
-    _ = require('alloy/underscore')._,
-    Backbone = require('alloy/backbone');
-/* jshint ignore:end */
-
-var sensimityClient = require('./../client/client'),
-    baseSensimityService = require('./../service/base'),
-    timerModule = require('ti.mely');
+import Alloy from 'alloy';
+import {_} from 'alloy/underscore';
+import Backbone from 'alloy/backbone';
+import sensimityClient from './../client/client';
+import baseSensimityService from './../service/base';
+import timerModule from 'ti.mely';
 
 /**
  * Public functions
@@ -17,7 +14,7 @@ var sensimityClient = require('./../client/client'),
  */
 function init() {
     // Send beaconlogs every 30 seconds
-    var timer = timerModule.createTimer();
+    const timer = timerModule.createTimer();
     timer.start({
         interval: 30000
     });
@@ -30,36 +27,32 @@ function init() {
  * @param beacon A beacon recieved by the beaconscanner
  */
 function insertBeaconLog(beacon) {
-    var timestamp = Math.round(new Date().getTime() / 1000);
-    beacon.timestamp = timestamp;
-    var beaconLog = baseSensimityService.createSensimityModel('BeaconLog', beacon);
+    beacon.timestamp = Math.round(new Date().getTime() / 1000);
+    const beaconLog = baseSensimityService.createSensimityModel('BeaconLog', beacon);
     beaconLog.save();
 }
 
-exports.init = init;
-exports.insertBeaconLog = insertBeaconLog;
+export default { init, insertBeaconLog };
 
 /**
  * Send the beacons to Sensimity
  */
 function sendBeaconLogs() {
-    if (Ti.Network.getOnline()) {
-        var library = baseSensimityService.createSensimityCollection('BeaconLog');
-        library.fetch({
-            success: sendBeaconLogsAfterFetch
-        });
+    if (!Ti.Network.getOnline()) {
+        return;
     }
-}
 
-/**
- * Send the beaconlogs to the SensimityAPI after fetching from the local database. Only send when beaconlogs are available.
- * @param beaconLogs The beaconLogs received
- */
-function sendBeaconLogsAfterFetch(beaconLogs) {
-    // Send beaconlogs only if exists
-    if (beaconLogs.length !== 0) {
-        sensimityClient.sendScanResults(JSON.parse(JSON.stringify(createBeaconLogsCollection(beaconLogs))), destroyBeaconLogs);
-    }
+    const library = baseSensimityService.createSensimityCollection('BeaconLog');
+    // Send the beaconlogs to the SensimityAPI after fetching from the local database. Only send when beaconlogs are available.
+    const success = (beaconLogs) => {
+        // Send beaconlogs only if exists
+        if (beaconLogs.length !== 0) {
+            sensimityClient.sendScanResults(JSON.parse(JSON.stringify(createBeaconLogsCollection(beaconLogs))), destroyBeaconLogs);
+        }   
+    };
+    library.fetch({
+        success
+    });
 }
 
 /**
@@ -68,7 +61,7 @@ function sendBeaconLogsAfterFetch(beaconLogs) {
  * @returns {{instance_ref: (exports.sensimity.instanceRef|*), device: {device_id: String, model: String, operating_system: String, version: String}, beaconLogs: *}}
  */
 function createBeaconLogsCollection(beaconLogs) {
-    var instanceRef = Alloy.CFG.sensimity.instanceRef;
+    const instanceRef = Alloy.CFG.sensimity.instanceRef;
     return {
         instance_ref: instanceRef,
         device: {
@@ -77,7 +70,7 @@ function createBeaconLogsCollection(beaconLogs) {
             operating_system: Ti.Platform.osname,
             version: Ti.Platform.version
         },
-        beaconLogs: beaconLogs
+        beaconLogs
     };
 }
 
@@ -85,7 +78,6 @@ function createBeaconLogsCollection(beaconLogs) {
  * Destroy the beaconlogs from local database
  */
 function destroyBeaconLogs() {
-    var collection = baseSensimityService.createSensimityCollection('BeaconLog');
-    collection.erase();
+    baseSensimityService.createSensimityCollection('BeaconLog').erase();
 }
 

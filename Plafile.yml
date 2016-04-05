@@ -13,3 +13,7 @@ update-code:
 build:
   - gulp build
   - titaniumifier --out dist
+  - =unzip
+
+unzip:
+  - unzip -o dist/com.sensimity.ti.client-commonjs-0.6.1.zip -d ~/Enrise/Fietsnetwerk/Repos/Fietsnetwerk-app

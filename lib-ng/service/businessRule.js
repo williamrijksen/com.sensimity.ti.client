@@ -1,11 +1,8 @@
-/* jshint ignore:start */
-var Alloy = require('alloy'),
-    _ = require('alloy/underscore')._,
-    Backbone = require('alloy/backbone');
-/* jshint ignore:end */
-
-var sensimityClient = require('./../client/client'),
-    baseSensimityService = require('./../service/base');
+import Alloy from 'alloy';
+import {_} from 'alloy/underscore';
+import Backbone from 'alloy/backbone';
+import sensimityClient from './../client/client';
+import baseSensimityService from './../service/base';
 
 /**
  * Public functions
@@ -16,12 +13,15 @@ var sensimityClient = require('./../client/client'),
  * @param {Object} knownBeacon find the business rules of this beacon
  */
 function fetchBusinessRules(knownBeacon) {
-    sensimityClient.getBusinessRules(knownBeacon.get('network_id'), knownBeacon.get('beacon_id'), function (data) {
-        if (!_.isEmpty(data._embedded.business_rule)) {
-            _.each(data._embedded.business_rule, function (businessruleRaw) {
-                saveFetchedBusinessRules(businessruleRaw);
-            });
+    sensimityClient.getBusinessRules(knownBeacon.get('network_id'), knownBeacon.get('beacon_id'), data => {
+        if (_.isEmpty(data._embedded.business_rule)) {
+            return;
         }
+
+        const rawBusinessRules = data._embedded.business_rule;
+        rawBusinessRules.forEach(businessruleRaw => {
+            saveFetchedBusinessRules(businessruleRaw);
+        });
     });
 }
 
@@ -31,14 +31,12 @@ function fetchBusinessRules(knownBeacon) {
  * @param knownBeacon knownBeacon Get the business rules of this beacon
  */
 function getBusinessRules(knownBeacon) {
-    var library = baseSensimityService.createSensimityCollection('BusinessRule');
+    const library = baseSensimityService.createSensimityCollection('BusinessRule');
     library.fetch();
-    var businessRules = library.where({beacon_id: knownBeacon.get('beacon_id')});
-    return businessRules;
+    return library.where({beacon_id: knownBeacon.get('beacon_id')});
 }
 
-exports.getBusinessRules = getBusinessRules;
-exports.fetchBusinessRules = fetchBusinessRules;
+export default { getBusinessRules, fetchBusinessRules };
 
 /**
  * Private functions
@@ -49,9 +47,8 @@ exports.fetchBusinessRules = fetchBusinessRules;
  * @param {Object} data retrieved raw business rule data
  */
 function saveFetchedBusinessRules(data) {
-    // Check business rule already exists in the system
-    var existingBusinessRule = findExistingBusinessRule(data.business_rule_id),
-        businessRule;
+    const existingBusinessRule = findExistingBusinessRule(data.business_rule_id);
+    let businessRule;
     if (_.isEmpty(existingBusinessRule)) {
         // CREATE NEW Business rule
         businessRule = createNewBusinessRuleItem(data);
@@ -99,12 +96,12 @@ function setNewDataInExistingBusinessRule(existingBusinessRule, data) {
  * @param id businessRuleId
  */
 function findExistingBusinessRule(businessRuleId) {
-    var library = baseSensimityService.createSensimityCollection('BusinessRule');
+    const library = baseSensimityService.createSensimityCollection('BusinessRule');
     library.fetch();
-    var businessRule = library.where({business_rule_id: businessRuleId});
+    const businessRule = library.where({business_rule_id: businessRuleId});
     if (_.isEmpty(businessRule)) {
         return businessRule;
-    } else {
-        return _.first(businessRule);
     }
+
+    return _.first(businessRule);
 }

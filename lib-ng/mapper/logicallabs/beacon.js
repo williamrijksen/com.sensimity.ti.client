@@ -1,10 +1,7 @@
-/* jshint ignore:start */
-var Alloy = require('alloy'),
-    _ = require('alloy/underscore')._,
-    Backbone = require('alloy/backbone');
-/* jshint ignore:end */
-
-var scanModule = require('com.logicallabs.beacons');
+import Alloy from 'alloy';
+import {_} from 'alloy/underscore';
+import Backbone from 'alloy/backbone';
+import scanModule from 'com.logicallabs.beacons';
 
 /**
  * Public functions
@@ -16,7 +13,7 @@ var scanModule = require('com.logicallabs.beacons');
  * @returns {{UUID: string, major: Number, minor: Number, rssi: Number, accuracy: Number, proximity: String }}
  */
 function map(beaconRaw) {
-    var proximity;
+    let proximity;
     switch (beaconRaw.proximity) {
         case scanModule.BEACON_PROXIMITY_UNKNOWN:
             proximity = 'unknown';
@@ -37,8 +34,8 @@ function map(beaconRaw) {
         minor: parseInt(beaconRaw.minor),
         rssi: parseInt(beaconRaw.RSSI),
         accuracy: beaconRaw.accuracy,
-        proximity: proximity
+        proximity
     };
 }
 
-exports.map = map;
+export {map};

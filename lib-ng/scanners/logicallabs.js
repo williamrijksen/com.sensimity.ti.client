@@ -1,34 +1,31 @@
-/* jshint ignore:start */
-var Alloy = require('alloy'),
-    _ = require('alloy/underscore')._,
-    Backbone = require('alloy/backbone');
-/* jshint ignore:end */
-
-var BaseScanner = require('./../scanners/base');
-var beaconMapper = require('./../mapper/logicallabs/beacon');
-var beaconRegionMapper = require('./../mapper/logicallabs/beaconRegion');
-var beaconRegionMonitoringMapper = require('./../mapper/logicallabs/beaconRegionMonitoring');
+import Alloy from 'alloy';
+import {_} from 'alloy/underscore';
+import Backbone from 'alloy/backbone';
+import BaseScanner from './../scanners/base';
+import beaconMapper from './../mapper/logicallabs/beacon';
+import beaconRegionMapper from './../mapper/logicallabs/beaconRegion';
+import beaconRegionMonitoringMapper from './../mapper/logicallabs/beaconRegionMonitoring';
 
 /**
  * Logicallabs scanner to scan iBeacons on iOS devices
  * @param boolean backgroundMode - Parameter to handle beacons when the application is running in backgroundmode
  * @returns {BaseScanner}
  */
-function logicallabsScanner() {
-    var self = new BaseScanner(beaconMapper, beaconRegionMapper, beaconRegionMonitoringMapper);
+export default function() {
+    const self = new BaseScanner(beaconMapper, beaconRegionMapper, beaconRegionMonitoringMapper);
     self.Beacons = require('com.logicallabs.beacons');
 
-    self.checkBluetooth = function () {};
+    self.checkBluetooth = () => {};
 
     // Bind the beaconservice
-    self.bindService = function () {
+    self.bindService = () => {
         // Check if the device is running iOS 8 or later, before registering for local notifications
         if (parseInt(Ti.Platform.version.split(".")[0], 10) >= 8) {
             self.Beacons.requestAlwaysAuthorization();
         }
     };
 
-    self.regionStateUpdated = function (e) {
+    self.regionStateUpdated = e => {
         switch(e.state) {
             case self.Beacons.REGION_STATE_INSIDE:
                 self.Beacons.startRangingBeacons({
@@ -43,8 +40,8 @@ function logicallabsScanner() {
         }
     };
 
-    self.beaconsFound = function (beacons) {
-        _.each(beacons.beacons, function (beacon) {
+    self.beaconsFound = beacons => {
+        beacons.beacons.forEach(beacon => {
             if (_.isUndefined(beacon) || _.isUndefined(beacon.RSSI)) {
                 return;
             }
@@ -54,25 +51,23 @@ function logicallabsScanner() {
     };
 
     // Stop scanning
-    self.stopScanning = function () {
+    self.stopScanning = () => {
         self.Beacons.stopRegionMonitoring();
         self.removeAllEventListeners();
         self.destruct();
     };
 
     // Add eventlisteners for scanning beacons
-    self.addAllEventListeners = function () {
+    self.addAllEventListeners = () => {
         self.Beacons.addEventListener('regionStateUpdated', self.regionStateUpdated);
         self.Beacons.addEventListener('rangedBeacons', self.beaconsFound);
     };
 
     // Remove eventlisteners when the scanning is stopped
-    self.removeAllEventListeners = function () {
+    self.removeAllEventListeners = () => {
         self.Beacons.removeEventListener('regionStateUpdated', self.regionStateUpdated);
         self.Beacons.removeEventListener('rangedBeacons', self.beaconsFound);
     };
 
     return self;
 }
-
-module.exports = logicallabsScanner;

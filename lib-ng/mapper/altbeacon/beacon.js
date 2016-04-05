@@ -1,7 +1,6 @@
-/* jshint ignore:start */
-var Alloy = require('alloy'),
-    _ = require('alloy/underscore')._,
-    Backbone = require('alloy/backbone');
+import Alloy from 'alloy';
+import {_} from 'alloy/underscore';
+import Backbone from 'alloy/backbone';
 /* jshint ignore:end */
 
 /**
@@ -24,4 +23,4 @@ function map(beaconRaw) {
     };
 }
 
-exports.map = map;
+export {map};
